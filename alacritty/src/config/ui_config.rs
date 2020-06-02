@@ -22,6 +22,9 @@ pub struct UIConfig {
 
     pub mouse: Mouse,
 
+    /// Show FPS in title.
+    pub fps: bool,
+
     /// Debug options.
     pub debug: Debug,
 
@@ -53,6 +56,7 @@ impl Default for UIConfig {
             font: Default::default(),
             window: Default::default(),
             mouse: Default::default(),
+            fps: false,
             debug: Default::default(),
             config_paths: Default::default(),
             key_bindings: Default::default(),

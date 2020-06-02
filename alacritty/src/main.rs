@@ -14,7 +14,6 @@ compile_error!(r#"at least one of the "x11"/"wayland" features must be enabled"#
 
 #[cfg(target_os = "macos")]
 use std::env;
-use std::error::Error;
 use std::fs;
 use std::io::{self, Write};
 use std::sync::Arc;
@@ -126,7 +125,7 @@ fn run(
     window_event_loop: GlutinEventLoop<Event>,
     config: Config,
     options: Options,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), display::Error> {
     info!("Welcome to Alacritty");
 
     // Log the configuration paths.

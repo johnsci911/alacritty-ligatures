@@ -190,9 +190,9 @@ impl CursorBlinking {
     }
 }
 
-impl Into<bool> for CursorBlinking {
-    fn into(self) -> bool {
-        self == Self::On || self == Self::Always
+impl From<CursorBlinking> for bool {
+    fn from(s: CursorBlinking) -> bool {
+        s == CursorBlinking::On || s == CursorBlinking::Always
     }
 }
 

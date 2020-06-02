@@ -13,6 +13,7 @@ pub mod index;
 pub mod selection;
 pub mod sync;
 pub mod term;
+pub mod text_run;
 pub mod thread;
 pub mod tty;
 pub mod vi_mode;

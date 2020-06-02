@@ -24,6 +24,7 @@ use crate::term::color::Rgb;
 use crate::term::render::RenderableContent;
 use crate::term::search::RegexSearch;
 use crate::vi_mode::{ViModeCursor, ViMotion};
+use std::ops::RangeInclusive;
 
 pub mod cell;
 pub mod color;
@@ -78,6 +79,9 @@ impl Default for TermMode {
             | TermMode::URGENCY_HINTS
     }
 }
+
+type CharWidth = usize;
+type LatestCol = (Column, CharWidth);
 
 pub struct VisualBell {
     /// Visual bell animation.
@@ -621,19 +625,17 @@ impl<T> Term<T> {
         &mut self.grid
     }
 
-    /// Terminal content required for rendering.
+    /// Iterate over the text runs in the terminal
     ///
-    /// A renderable cell is any cell which has content other than the default background color.
-    /// Cells with an alternate background color are considered renderable, as are cells with any
-    /// text content.
-    ///
-    /// The cursor itself is always considered renderable and provided separately.
+    /// A text run is a continuous line of cells that all share the same rendering properties
+    /// (background color, foreground color, etc.).
     pub fn renderable_content<'b, C>(
         &'b self,
         config: &'b Config<C>,
         show_cursor: bool,
+        viewport_match: Option<RangeInclusive<Point>>,
     ) -> RenderableContent<'_, T, C> {
-        RenderableContent::new(&self, config, show_cursor)
+        RenderableContent::new(&self, config, show_cursor, viewport_match)
     }
 
     /// Get the selection within the viewport.
@@ -1958,6 +1960,7 @@ pub enum ClipboardType {
     Selection,
 }
 
+#[derive(Clone)]
 struct TabStops {
     tabs: Vec<bool>,
 }

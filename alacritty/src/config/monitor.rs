@@ -1,4 +1,6 @@
 use std::fs;
+#[cfg(not(windows))]
+use std::os::unix::fs::FileTypeExt;
 use std::path::PathBuf;
 use std::sync::mpsc;
 use std::time::Duration;
@@ -19,6 +21,25 @@ pub fn watch(mut paths: Vec<PathBuf>, event_proxy: EventProxy) {
     // Canonicalize all paths, filtering out the ones that do not exist.
     paths = paths
         .drain(..)
+        .filter_map(|path| {
+            fs::metadata(&path).ok().and_then(|meta| {
+                let filetype = meta.file_type();
+                if filetype.is_dir() {
+                    return None;
+                }
+                #[cfg(not(windows))]
+                {
+                    if filetype.is_block_device()
+                        || filetype.is_char_device()
+                        || filetype.is_fifo()
+                        || filetype.is_socket()
+                    {
+                        return None;
+                    }
+                }
+                Some(path)
+            })
+        })
         .filter_map(|path| match fs::canonicalize(&path) {
             Ok(path) => Some(path),
             Err(err) => {

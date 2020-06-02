@@ -33,7 +33,7 @@ signal-hook = { version = "0.1", features = ["mio-support"] }
 
 [target.'cfg(windows)'.dependencies]
 miow = "0.3"
-winapi = { version = "0.3.7", features = [
+winapi = { version = "0.3.9", features = [
     "impl-default", "basetsd", "libloaderapi", "minwindef", "ntdef", "processthreadsapi", "winbase",
     "wincon", "wincontypes", "winerror", "winnt", "winuser",
 ]}

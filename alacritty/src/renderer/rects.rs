@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::mem;
 
 use crossfont::Metrics;
@@ -6,8 +5,8 @@ use crossfont::Metrics;
 use alacritty_terminal::index::{Column, Point};
 use alacritty_terminal::term::cell::Flags;
 use alacritty_terminal::term::color::Rgb;
-use alacritty_terminal::term::render::RenderableCell;
 use alacritty_terminal::term::SizeInfo;
+use alacritty_terminal::text_run::TextRun;
 
 use crate::gl;
 use crate::gl::types::*;
@@ -26,6 +25,84 @@ pub struct RenderRect {
 impl RenderRect {
     pub fn new(x: f32, y: f32, width: f32, height: f32, color: Rgb, alpha: f32) -> Self {
         RenderRect { x, y, width, height, color, alpha }
+    }
+
+    #[inline]
+    pub fn from_text_run(
+        text_run: &TextRun,
+        descent: f32,
+        position: f32,
+        thickness: f32,
+        size: &SizeInfo,
+    ) -> Self {
+        let start_point = text_run.start_point();
+        let start_x = start_point.col.0 as f32 * size.cell_width();
+        let end_x = (text_run.end_point().col.0 + 1) as f32 * size.cell_width();
+        let width = end_x - start_x;
+
+        let line_bottom = (start_point.line.0 + 1) as f32 * size.cell_height();
+        let baseline = line_bottom + descent;
+
+        // Make sure lines are always visible.
+        let height = thickness.max(1.);
+
+        let mut y = (baseline - position - height / 2.).ceil();
+        let max_y = line_bottom - height;
+        y = y.min(max_y);
+
+        Self {
+            x: start_x + size.padding_x(),
+            y: y + size.padding_y(),
+            width,
+            height,
+            color: text_run.fg,
+            alpha: 1.,
+        }
+    }
+
+    pub fn all_from_text_run(
+        text_run: &TextRun,
+        metrics: &crossfont::Metrics,
+        size_info: &SizeInfo,
+    ) -> Vec<Self> {
+        let mut rects = vec![];
+        if text_run.flags.contains(Flags::UNDERLINE) {
+            rects.push(Self::from_text_run(
+                text_run,
+                metrics.descent,
+                metrics.underline_position,
+                metrics.underline_thickness,
+                size_info,
+            ));
+        }
+        if text_run.flags.contains(Flags::STRIKEOUT) {
+            rects.push(Self::from_text_run(
+                text_run,
+                metrics.descent,
+                metrics.strikeout_position,
+                metrics.strikeout_thickness,
+                size_info,
+            ));
+        }
+        if text_run.flags.contains(Flags::DOUBLE_UNDERLINE) {
+            let top_pos = 0.25 * metrics.descent;
+            let bottom_pos = 0.75 * metrics.descent;
+            rects.push(Self::from_text_run(
+                text_run,
+                metrics.descent,
+                top_pos,
+                metrics.underline_thickness,
+                size_info,
+            ));
+            rects.push(Self::from_text_run(
+                text_run,
+                metrics.descent,
+                bottom_pos,
+                metrics.underline_thickness,
+                size_info,
+            ));
+        }
+        rects
     }
 }
 
@@ -129,71 +206,6 @@ impl RenderLine {
             color,
             1.,
         )
-    }
-}
-
-/// Lines for underline and strikeout.
-#[derive(Default)]
-pub struct RenderLines {
-    inner: HashMap<Flags, Vec<RenderLine>>,
-}
-
-impl RenderLines {
-    #[inline]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    #[inline]
-    pub fn rects(&self, metrics: &Metrics, size: &SizeInfo) -> Vec<RenderRect> {
-        self.inner
-            .iter()
-            .flat_map(|(flag, lines)| {
-                lines.iter().flat_map(move |line| line.rects(*flag, metrics, size))
-            })
-            .collect()
-    }
-
-    /// Update the stored lines with the next cell info.
-    #[inline]
-    pub fn update(&mut self, cell: &RenderableCell) {
-        self.update_flag(&cell, Flags::UNDERLINE);
-        self.update_flag(&cell, Flags::DOUBLE_UNDERLINE);
-        self.update_flag(&cell, Flags::STRIKEOUT);
-    }
-
-    /// Update the lines for a specific flag.
-    fn update_flag(&mut self, cell: &RenderableCell, flag: Flags) {
-        if !cell.flags.contains(flag) {
-            return;
-        }
-
-        // Include wide char spacer if the current cell is a wide char.
-        let mut end: Point = cell.into();
-        if cell.flags.contains(Flags::WIDE_CHAR) {
-            end.col += 1;
-        }
-
-        // Check if there's an active line.
-        if let Some(line) = self.inner.get_mut(&flag).and_then(|lines| lines.last_mut()) {
-            if cell.fg == line.color
-                && cell.column == line.end.col + 1
-                && cell.line == line.end.line
-            {
-                // Update the length of the line.
-                line.end = end;
-                return;
-            }
-        }
-
-        // Start new line if there currently is none.
-        let line = RenderLine { start: cell.into(), end, color: cell.fg };
-        match self.inner.get_mut(&flag) {
-            Some(lines) => lines.push(line),
-            None => {
-                self.inner.insert(flag, vec![line]);
-            },
-        }
     }
 }
 

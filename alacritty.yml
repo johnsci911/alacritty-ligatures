@@ -11,6 +11,11 @@
 #import:
 #  - /path/to/alacritty.yml
 
+
+# This value is used to decide whether to show FPS in title bar or not.
+# By default, it's set to false
+#fps: false
+
 # Any items in the `env` entry below will be added as
 # environment variables. Some entries may override variables
 # set by alacritty itself.
@@ -171,6 +176,10 @@
   # Thin strokes are suitable for retina displays, but for non-retina screens
   # it is recommended to set `use_thin_strokes` to `false`.
   #use_thin_strokes: true
+
+  # Choose whether to enable ligature (Currently only in Linux, may work in macOS)
+  # by default it's true (enabled)
+  #ligatures: true
 
 # If `true`, bold text is drawn using the bright color variants.
 #draw_bold_text_with_bright_colors: false

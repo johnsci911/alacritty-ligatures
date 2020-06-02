@@ -1,5 +1,5 @@
 use std::fmt::{self, Display, Formatter};
-use std::ops::{Add, Index, IndexMut, Mul};
+use std::ops::{Add, Div, Index, IndexMut, Mul};
 use std::str::FromStr;
 
 use log::trace;
@@ -15,7 +15,7 @@ pub const COUNT: usize = 269;
 /// Factor for automatic computation of dim colors used by terminal.
 pub const DIM_FACTOR: f32 = 0.66;
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Default, Serialize)]
+#[derive(Hash, Debug, Eq, PartialEq, Copy, Clone, Default, Serialize)]
 pub struct Rgb {
     pub r: u8,
     pub g: u8,
@@ -62,6 +62,7 @@ impl Rgb {
 impl Mul<f32> for Rgb {
     type Output = Rgb;
 
+    #[inline]
     fn mul(self, rhs: f32) -> Rgb {
         let result = Rgb {
             r: (f32::from(self.r) * rhs).max(0.0).min(255.0) as u8,
@@ -84,6 +85,24 @@ impl Add<Rgb> for Rgb {
             g: self.g.saturating_add(rhs.g),
             b: self.b.saturating_add(rhs.b),
         }
+    }
+}
+
+// A divide function for Rgb, as the default dim is just *2/3.
+impl Div<f32> for Rgb {
+    type Output = Rgb;
+
+    #[inline]
+    fn div(self, rhs: f32) -> Rgb {
+        let result = Rgb {
+            r: (f32::from(self.r) / rhs).max(0.0).min(255.0) as u8,
+            g: (f32::from(self.g) / rhs).max(0.0).min(255.0) as u8,
+            b: (f32::from(self.b) / rhs).max(0.0).min(255.0) as u8,
+        };
+
+        trace!("Shrink RGB by {} from {:?} to {:?}", rhs, self, result);
+
+        result
     }
 }
 

@@ -68,75 +68,70 @@ impl Options {
             .version(version.as_str())
             .author(crate_authors!("\n"))
             .about(crate_description!())
-            .arg(Arg::with_name("ref-test").long("ref-test").help("Generates ref test"))
+            .arg(Arg::new("ref-test").long("ref-test").about("Generates ref test"))
+            .arg(Arg::new("print-events").long("print-events").about("Print all events to stdout"))
             .arg(
-                Arg::with_name("print-events")
-                    .long("print-events")
-                    .help("Print all events to stdout"),
-            )
-            .arg(
-                Arg::with_name("title")
+                Arg::new("title")
                     .long("title")
-                    .short("t")
+                    .short('t')
                     .takes_value(true)
-                    .help(&format!("Defines the window title [default: {}]", DEFAULT_NAME)),
+                    .about(&format!("Defines the window title [default: {}]", DEFAULT_NAME)),
             )
             .arg(
-                Arg::with_name("class")
+                Arg::new("class")
                     .long("class")
                     .value_name("instance> | <instance>,<general")
                     .takes_value(true)
                     .use_delimiter(true)
-                    .help(&format!(
+                    .about(&format!(
                         "Defines window class/app_id on X11/Wayland [default: {}]",
                         DEFAULT_NAME
                     )),
             )
-            .arg(
-                Arg::with_name("embed").long("embed").takes_value(true).help(
-                    "Defines the X11 window ID (as a decimal integer) to embed Alacritty within",
-                ),
-            )
-            .arg(
-                Arg::with_name("q")
-                    .short("q")
-                    .multiple(true)
-                    .conflicts_with("v")
-                    .help("Reduces the level of verbosity (the min level is -qq)"),
-            )
-            .arg(
-                Arg::with_name("v")
-                    .short("v")
-                    .multiple(true)
-                    .conflicts_with("q")
-                    .help("Increases the level of verbosity (the max level is -vvv)"),
-            )
-            .arg(
-                Arg::with_name("working-directory")
-                    .long("working-directory")
-                    .takes_value(true)
-                    .help("Start the shell in the specified working directory"),
-            )
-            .arg(Arg::with_name("config-file").long("config-file").takes_value(true).help(
-                &format!("Specify alternative configuration file [default: {}]", CONFIG_PATH),
+            .arg(Arg::new("embed").long("embed").takes_value(true).about(
+                "Defines the X11 window ID (as a decimal integer) to embed Alacritty within",
             ))
             .arg(
-                Arg::with_name("command")
+                Arg::new("q")
+                    .short('q')
+                    .multiple(true)
+                    .conflicts_with("v")
+                    .about("Reduces the level of verbosity (the min level is -qq)"),
+            )
+            .arg(
+                Arg::new("v")
+                    .short('v')
+                    .multiple(true)
+                    .conflicts_with("q")
+                    .about("Increases the level of verbosity (the max level is -vvv)"),
+            )
+            .arg(
+                Arg::new("working-directory")
+                    .long("working-directory")
+                    .takes_value(true)
+                    .about("Start the shell in the specified working directory"),
+            )
+            .arg(Arg::new("config-file").long("config-file").takes_value(true).about(&format!(
+                "Specify alternative configuration file [default: {}]",
+                CONFIG_PATH
+            )))
+            .arg(
+                Arg::new("command")
                     .long("command")
-                    .short("e")
+                    .short('e')
                     .multiple(true)
                     .takes_value(true)
                     .allow_hyphen_values(true)
-                    .help("Command and args to execute (must be last argument)"),
+                    .about("Command and args to execute (must be last argument)"),
             )
-            .arg(Arg::with_name("hold").long("hold").help("Remain open after child process exits"))
+            .arg(Arg::new("hold").long("hold").about("Remain open after child process exits"))
             .arg(
-                Arg::with_name("option")
+                Arg::new("option")
                     .long("option")
-                    .short("o")
+                    .short('o')
                     .multiple(true)
                     .takes_value(true)
-                    .help("Override configuration file options [example: cursor.style=Beam]"),
+                    .about("Override configuration file options [example: cursor.style=Beam]"),
             )
             .get_matches();
 

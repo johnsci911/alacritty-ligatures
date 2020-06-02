@@ -2,7 +2,7 @@
 #[cfg(not(any(target_os = "macos", windows)))]
 use {
     std::sync::atomic::AtomicBool,
-    std::sync::Arc,
+    std::rc::Rc,
 
     glutin::platform::unix::{WindowBuilderExtUnix, WindowExtUnix},
 };
@@ -148,7 +148,7 @@ fn create_gl_window<E>(
 pub struct Window {
     /// Flag tracking frame redraw requests from Wayland compositor.
     #[cfg(not(any(target_os = "macos", windows)))]
-    pub should_draw: Arc<AtomicBool>,
+    pub should_draw: Rc<AtomicBool>,
 
     /// Attached Wayland surface to request new frame events.
     #[cfg(all(feature = "wayland", not(any(target_os = "macos", windows))))]
@@ -160,6 +160,8 @@ pub struct Window {
     windowed_context: WindowedContext<PossiblyCurrent>,
     current_mouse_cursor: CursorIcon,
     mouse_visible: bool,
+    fps: Option<f64>,
+    title: Option<String>,
 }
 
 impl Window {
@@ -224,10 +226,12 @@ impl Window {
             mouse_visible: true,
             windowed_context,
             #[cfg(not(any(target_os = "macos", windows)))]
-            should_draw: Arc::new(AtomicBool::new(true)),
+            should_draw: Rc::new(AtomicBool::new(true)),
             #[cfg(all(feature = "wayland", not(any(target_os = "macos", windows))))]
             wayland_surface,
             dpr,
+            fps: None,
+            title: None,
         })
     }
 
@@ -246,8 +250,35 @@ impl Window {
 
     /// Set the window title.
     #[inline]
-    pub fn set_title(&self, title: &str) {
-        self.window().set_title(title);
+    pub fn set_title(&mut self, title: &str) {
+        self.title = Some(title.to_string());
+        if let Some(fps) = self.fps {
+            self.window().set_title(&format!("FPS: {:.0}, {}", fps, title));
+        } else {
+            self.window().set_title(title);
+        }
+    }
+
+    #[inline]
+    pub fn set_fps(&mut self, fps: f64) {
+        self.fps = Some(fps);
+        if let Some(title) = &self.title {
+            self.window().set_title(&format!("FPS: {:.0}, {}", fps, title));
+        } else {
+            self.window().set_title(&format!("FPS: {:.0}", fps));
+        }
+    }
+
+    #[inline]
+    pub fn unset_fps(&mut self) {
+        if self.fps.is_some() {
+            self.fps = None;
+            if let Some(title) = &self.title {
+                self.window().set_title(title);
+            } else {
+                self.window().set_title("");
+            }
+        }
     }
 
     #[inline]

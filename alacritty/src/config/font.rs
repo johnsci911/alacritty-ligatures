@@ -14,7 +14,7 @@ use crate::config::ui_config::Delta;
 /// field in this struct. It might be nice in the future to have defaults for
 /// each value independently. Alternatively, maybe erroring when the user
 /// doesn't provide complete config is Ok.
-#[derive(ConfigDeserialize, Default, Debug, Clone, PartialEq, Eq)]
+#[derive(ConfigDeserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Font {
     /// Extra spacing per character.
     pub offset: Delta<i8>,
@@ -38,6 +38,25 @@ pub struct Font {
 
     /// Font size in points.
     size: Size,
+
+    /// Toggles rendering of font ligatures
+    pub ligatures: bool,
+}
+
+impl Default for Font {
+    fn default() -> Font {
+        Font {
+            offset: Default::default(),
+            glyph_offset: Default::default(),
+            use_thin_strokes: false,
+            normal: Default::default(),
+            bold: Default::default(),
+            italic: Default::default(),
+            bold_italic: Default::default(),
+            size: Default::default(),
+            ligatures: true,
+        }
+    }
 }
 
 impl Font {
